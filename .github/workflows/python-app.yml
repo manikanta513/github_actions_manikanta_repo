@@ -1,0 +1,33 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python application deployment on k8s
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build-deploy:
+
+    runs-on: [self-hosted, linux, x64]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build image
+      run: docker build -t my-python-app:latest .
+
+    - name: Load image into kind
+      run: kind load docker-image my-python-app:latest
+
+    - name: Deploy to cluster
+      run: |
+        kubectl apply -f k8s-deployment.yaml
+        kubectl rollout status deployment/python-app
+    
+    
